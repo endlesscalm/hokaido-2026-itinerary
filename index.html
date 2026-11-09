@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北海道冬雪5天4夜不自駕自由行</title>
+    
+    <!-- 引入地圖渲染引擎 -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            color: #333;
+            background-color: #f4f6f9;
+        }
+        #sidebar {
+            width: 45%;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            background: #ffffff;
+            z-index: 1000;
+        }
+        #map-container {
+            width: 55%;
+            height: 100%;
+            position: relative;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        h1 {
+            font-size: 24px;
+            color: #1a365d;
+            border-bottom: 3px solid #3182ce;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .day-title {
+            background: #3182ce;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 25px;
+            font-size: 16px;
+        }
+        .spot-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #48bb78;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .spot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: #f7fafc;
+            border-left-color: #3182ce;
+        }
+        .spot-name {
+            font-weight: bold;
+            font-size: 15px;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .spot-desc {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.5;
+        }
+        .tips-box {
+            background: #ebf8ff;
+            border-left: 5px solid #3182ce;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column-reverse; }
+            #sidebar { width: 100%; height: 50%; }
+            #map-container { width: 100%; height: 50%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h1>❄️ 北海道 5天4夜冬季自由行</h1>
+        <p style="font-size:13px; color:#a0aec0;">💡 點擊左側景點卡片，地圖將精準對焦。點擊彈出視窗右上角的 (X) 關閉，地圖會立即自動還原至多城市完整視野。</p>
+
+        <!-- DAY 1 -->
+        <div class="day-title">Day 1：札幌市區文青與奇幻水族館之旅</div>
+        <div class="spot-card" onclick="focusSpot('spot1')">
+            <div class="spot-name">1. 北海道大學綜合博物館</div>
+            <div class="spot-desc">免費參觀！館內珍藏大型牛馬解剖標本及超逼真冰河時期長毛象原尺寸模型，還能動手摸化石。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot2')">
+            <div class="spot-name">2. 北大マルシェ Café&Labo</div>
+            <div class="spot-desc">隱藏版校園乳製品咖啡廳。必吃焦糖布丁、發酵奶油蛋糕以及人氣NO.1的「夢幻奶油蛋糕」，機場買不到！</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot3')">
+            <div class="spot-name">3. Majisand (狸小路一丁目)</div>
+            <div class="spot-desc">超人氣精美水果三明治專賣店，特別使用海綿蛋糕體代替吐司麵包，麝香葡萄與草莓口味口感絕佳。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot4')">
+            <div class="spot-name">4. 本陣狸大明神社 (狸小路二丁目)</div>
+            <div class="spot-desc">商店街路邊的守護神社。據說參拜後去摸狸貓地藏身上的八個部位，能分別帶來不同層面的好運氣。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot5')">
+            <div class="spot-name">5. AOAO SAPPORO (狸小路三丁目)</div>
+            <div class="spot-desc">大樓內的都市高空水族館（門票2200日圓）。營業至晚上10點，必看企鵝遊行與夢幻夜間水母館。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot6')">
+            <div class="spot-name">6. Medicineman 藥膳湯咖哩</div>
+            <div class="spot-desc">Tabelog 札幌高分名店，主打帶有大量新香料的高層次藥膳湯底，大塊北海道蔬菜熬煮得極度入味。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot7')">
+            <div class="spot-name">7. GELATERIA La Giostra</div>
+            <div class="spot-desc">七丁目每週只開五、六晚上（20:00-24:00）的深夜冰淇淋店。開心果口味极其濃郁且吃得到堅果實。</div>
+        </div>
+
+        <!-- DAY 2 -->
+        <div class="day-title">Day 2：奢華海鮮市場、瀧野大佛與藻岩山無敵夜景</div>
+        <div class="spot-card" onclick="focusSpot('spot8')">
+            <div class="spot-name">1. 海鮮市場 北のグルメ (場外市場)</div>
+            <div class="spot-desc">避開二條市場的饕客首選！必點炭烤巨型鱈場蟹腳、大碗高CP烤一夜干定食（1180日圓）與極鮮海鮮丼。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot9')">
+            <div class="spot-name">2. 真駒內瀧野靈園·頭大佛殿</div>
+            <div class="spot-desc">安藤忠雄大師操刀。冬季白雪覆蓋宛如大佛戴上白色雪帽。可在此抽超美的薰衣草背景籤與大佛繪馬。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot10')">
+            <div class="spot-name">3. 藻岩山山頂展望台 (新日本三大夜景)</div>
+            <div class="spot-desc">搭乘兩段纜車登頂，享受360度札幌璀璨夜景。山頂設有幸福之鐘。上山前務必上官網確認 Live Cam 視野。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot11')">
+            <div class="spot-name">4. 札幌啤酒園 ポプラ館 (成吉思汗烤肉)</div>
+            <div class="spot-desc">建議提早訂位！每人6000日圓享受紅磚歐風倉庫內的成吉思汗羔羊肉烤肉+啤酒無限暢飲，烤大腸極度驚艷。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot12')">
+            <div class="spot-name">5. 薄野喫茶 パープルダリア</div>
+            <div class="spot-desc">用深夜精美聖代（Shime Parfait）完美結尾。復古玻璃花窗氛圍，季節草莓開心果聖代中融入了獨特八角香氣。</div>
+        </div>
+
+        <!-- DAY 3 -->
+        <div class="day-title">Day 3：美瑛富良野冬景一日遊（觀光巴士一日團）</div>
+        <div class="spot-card" onclick="focusSpot('spot13')">
+            <div class="spot-name">1. 旭川市旭山動物園 (企鵝散步)</div>
+            <div class="spot-desc">冬季必看！早晨11點開始近距離觀賞企鵝甩手成群遊行。請務必聽從導遊指示提早到路線旁卡位第一排。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot14')">
+            <div class="spot-name">2. 展望花畑 四季彩の丘 (雪上摩托車)</div>
+            <div class="spot-desc">冬季轉變為白雪丘陵。體驗雪上摩托車，兩人共乘一台車為 16,000 日圓，一人單騎為 12,000 日圓。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot15')">
+            <div class="spot-name">3. Ken & Mary之樹</div>
+            <div class="spot-desc">銀白世界中單獨挺立在山坡上的孤單大樹，具備經典北國風姿，可作為一日遊行程中快速拍照點。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot16')">
+            <div class="spot-name">4. 富良野森林精靈露台</div>
+            <div class="spot-desc">童話般的夢幻森林木屋。傍晚點亮黃色溫暖燈光，如同芬蘭聖誕村。雪地木棧道極滑，行進需加快速度。</div>
+        </div>
+
+        <!-- DAY 4 -->
+        <div class="day-title">Day 4：浪漫小樽電影感一日輕旅行</div>
+        <div class="spot-card" onclick="focusSpot('spot17')">
+            <div class="spot-name">1. 小樽宝すし (將太的壽司老店)</div>
+            <div class="spot-desc">超過50年歷史，必須提早預約。6600日圓套餐包含10貫極鮮壽司，干貝海膽甜美毫無苦味，高達98分評分。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot18')">
+            <div class="spot-name">2. 小樽住吉神社 (海景鳥居)</div>
+            <div class="spot-desc">搭乘公車三站即可抵達。走到最高處回望，可拍下紅色千本鳥居、白雪與遠方小樽大海同框的絕美畫面。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot19')">
+            <div class="spot-name">3. 小樽音樂盒堂蒸汽鐘</div>
+            <div class="spot-desc">特地選在整點前到訪，觀賞蒸汽鐘準時噴出白色蒸汽並鳴奏悠揚音樂的可愛場景，對面鐘聲亦會迴響。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot20')">
+            <div class="spot-name">4. 小樽アンデリス (Un délice 布丁大福)</div>
+            <div class="spot-desc">當地排隊布丁名店，必買「布丁大福」—QQ外皮包裹著完整冰涼布丁與鮮奶油，口感有如布丁冰棒。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot21')">
+            <div class="spot-name">5. 小樽藝術村 花窗玻璃美術館</div>
+            <div class="spot-desc">舊高橋倉庫內展示19至20世紀珍貴英國教堂花窗原件，近距離觀看故事工藝，神祕、華麗且莊嚴。</div>
+        </div>
+
+        <!-- DAY 5 -->
+        <div class="day-title">Day 5：六花亭限定甜點採購與完美味噌拉麵 Ending</div>
+        <div class="spot-card" onclick="focusSpot('spot22')">
+            <div class="spot-name">1. 六花亭 札幌本店</div>
+            <div class="spot-desc">一樓可採購機場限定伴手禮。二樓喫茶室大推「冰淇淋版」蘭姆葡萄三明治（限2小時內吃完）與起司乳酪夾心餅。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot23')">
+            <div class="spot-name">2. 雪印パーラー 札幌本店</div>
+            <div class="spot-desc">可在店內享用當年專門供奉給日本天皇的頂級「天皇冰淇淋（Royal Special）」，蛋奶香極度濃厚純粹。</div>
+        </div>
+        <div class="spot-card" onclick="focusSpot('spot24')">
+            <div class="spot-name">3. 麵屋雪風 すすきの本店</div>
+            <div class="spot-desc">Tabelog 3.7分拉麵名店。建議開門前排隊。三種味噌與三種湯底調製的湯頭完全不鹹膩，粗捲麵極Q彈。</div>
+        </div>
+
+        <div class="tips-box">
+            <strong>🧳 冬季不自駕防寒密技：</strong><br>
+            1. 鞋子一定要防水且夠厚，踩進雪堆才不會濕透凍傷。<br>
+            2. 雪上活動請準備「五指分開」的防水厚手套，抓握手把與拿手機更靈活。<br>
+            3. 冬季巴士團極度準時，切勿遲到以防在暴雪中被放鳥！
+        </div>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+    <!-- 引入地圖邏輯 -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 定義經緯度點位
+        var spots = {
+            'spot1': { lat: 43.0722, lng: 141.3435, name: '北海道大學綜合博物館' },
+            'spot2': { lat: 43.0755, lng: 141.3422, name: '北大マルシェ Café&Labo' },
+            'spot3': { lat: 43.0569, lng: 141.3533, name: 'Majisand水果三明治' },
+            'spot4': { lat: 43.0565, lng: 141.3512, name: '本陣狸大明神社' },
+            'spot5': { lat: 43.0568, lng: 141.3499, name: 'AOAO SAPPORO 高空水族館' },
+            'spot6': { lat: 43.0512, lng: 141.3541, name: 'Medicineman 藥膳湯咖哩' },
+            'spot7': { lat: 43.0549, lng: 141.3468, name: 'GELATERIA La Giostra' },
+            'spot8': { lat: 43.0701, lng: 141.3195, name: '海鮮市場 北のグルメ' },
+            'spot9': { lat: 42.9208, lng: 141.3592, name: '頭大佛殿' },
+            'spot10': { lat: 43.0215, lng: 141.3321, name: '藻岩山山頂展望台' },
+			'spot11': { lat: 43.0715, lng: 141.3688, name: '札幌啤酒園 ポプラ館' },
+			'spot12': { lat: 43.0538, lng: 141.3544, name: '薄野喫茶 パープルダリア' },
+			'spot13': { lat: 43.7682, lng: 142.4801, name: '旭川市旭山動物園' },
+			'spot14': { lat: 43.5325, lng: 142.4644, name: '展望花畑 四季彩の丘' },
+			'spot15': { lat: 43.6012, lng: 142.4502, name: 'Ken & Mary之樹' },
+			'spot16': { lat: 43.3415, lng: 142.3555, name: '富良野森林精靈露台' },
+			'spot17': { lat: 43.1912, lng: 141.0022, name: '小樽宝すし' },
+			'spot18': { lat: 43.1844, lng: 141.0088, name: '小樽住吉神社' },
+			'spot19': { lat: 43.1905, lng: 141.0078, name: '小樽音樂盒堂蒸汽鐘' },
+			'spot20': { lat: 43.1932, lng: 141.0035, name: '小樽アンデリス布丁大福' },
+			'spot21': { lat: 43.1965, lng: 141.0011, name: '小樽藝術村花窗玻璃美術館' },
+			'spot22': { lat: 43.0632, lng: 141.3488, name: '六花亭札幌本店' },
+			'spot23': { lat: 43.0622, lng: 141.3512, name: '雪印パーラー札幌本店' },
+			'spot24': { lat: 43.0535, lng: 141.3528, name: '麵屋雪風 すすきの本店' }
+};
+var map = L.map('map');
+var isNavigating = false; // 狀態鎖狀態
+// 使用 Esri 免金鑰開放街道地圖層
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+attribution: 'Tiles © Esri'
+}).addTo(map);
+var markers = {};
+var markerGroup = L.featureGroup();
+// 渲染所有標記點
+for (var key in spots) {
+if (spots.hasOwnProperty(key)) {
+var s = spots[key];
+var m = L.marker([s.lat, s.lng]).bindPopup("" + s.name + "");
+markers[key] = m;
+markerGroup.addLayer(m);
+}
+}
+markerGroup.addTo(map);
+// 自適應調整至全景視野
+function showAllSpotsView() {
+map.fitBounds(markerGroup.getBounds(), { padding: [50, 50] });
+}
+showAllSpotsView();
+// 點擊左側列表的焦點定位
+function focusSpot(id) {
+isNavigating = true; // 開啟狀態鎖，防止關閉舊視窗觸發拉遠
+var s = spots[id];
+map.flyTo([s.lat, s.lng], 14, { animate: true, duration: 1.0 });
+markers[id].openPopup();
+// 地圖完成平移後解鎖
+setTimeout(function() {
+isNavigating = false;
+}, 1100);
+}
+// Remove any code inside the popupclose listener that resets the map view/bounds
+map.on('popupclose', function(e) {
+    // Leave this empty or only handle UI state changes. 
+    // DO NOT call map.setView() or map.fitBounds() here.
+});
+
+// When adding markers, ensure they just pan to the center rather than changing zoom
+markers.forEach(markerData => {
+    const marker = L.marker([markerData.lat, markerData.lng]).addTo(map);
+    
+    marker.bindPopup(markerData.content);
+    
+    // Optional: Smoothly pan to the pin when clicked without zooming out
+    marker.on('click', function(e) {
+        map.panTo(e.latlng); 
+    });
+});
+    </script>
+</body>
+</html>
